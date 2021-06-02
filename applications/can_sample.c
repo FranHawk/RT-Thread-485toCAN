@@ -95,8 +95,8 @@ int can_sample(int argc, char *argv[])
 
     /* 以中断接收及发送方式打开 CAN 设备 */
     res = rt_device_open(can_dev, RT_DEVICE_FLAG_INT_TX | RT_DEVICE_FLAG_INT_RX);
-    res = rt_device_control(can_dev, RT_CAN_CMD_SET_BAUD, (void *)CAN1MBaud);
-    res = rt_device_control(can_dev, RT_CAN_CMD_SET_MODE, (void *)RT_CAN_MODE_LOOPBACK);
+    res = rt_device_control(can_dev, RT_CAN_CMD_SET_BAUD, (void *)CAN500kBaud);
+    res = rt_device_control(can_dev, RT_CAN_CMD_SET_MODE, (void *)RT_CAN_MODE_NORMAL);
     RT_ASSERT(res == RT_EOK);
     /* 创建数据接收线程 */
     thread = rt_thread_create("can_rx", can_rx_thread, RT_NULL, 1024, 25, 10);
@@ -108,7 +108,7 @@ int can_sample(int argc, char *argv[])
     {
         rt_kprintf("create can_rx thread failed!\n");
     }
-
+    rt_thread_mdelay(1000);
     msg.id = 0x78;              /* ID 为 0x78 */
     msg.ide = RT_CAN_STDID;     /* 标准格式 */
     msg.rtr = RT_CAN_DTR;       /* 数据帧 */
@@ -123,11 +123,11 @@ int can_sample(int argc, char *argv[])
     msg.data[6] = 0x66;
     msg.data[7] = 0x77;
     /* 发送一帧 CAN 数据 */
-    size = rt_device_write(can_dev, 0, &msg, sizeof(msg));
-    if (size == 0)
-    {
-        rt_kprintf("can dev write data failed!\n");
-    }
+//    size = rt_device_write(can_dev, 0, &msg, sizeof(msg));
+//    if (size == 0)
+//    {
+//        rt_kprintf("can dev write data failed!\n");
+//    }
 
     return res;
 }
