@@ -106,36 +106,36 @@ static void rs485_serial_thread_entry(void *parameter)
         result = rt_mq_recv(&rs485_serial_rx_mq, &msg, sizeof(msg), RT_WAITING_FOREVER);
         if (result == RT_EOK)
         {
-            rt_kprintf("%d\n", msg.size);
+            //rt_kprintf("%d\n", msg.size);
             /* 从串口读取数据*/
 
             rx_length = rt_device_read(msg.dev, 0, rx_buffer, msg.size);
 
-            rt_kprintf("%02x\n", rx_buffer[0]);
-            rt_kprintf("%02x\n", rx_buffer[1]);
-            rt_kprintf("%02x\n", rx_buffer[2]);
-            rt_kprintf("%02x\n", rx_buffer[3]);
-            rt_kprintf("%02x\n", rx_buffer[4]);
-            rt_kprintf("%02x\n", rx_buffer[5]);
-            rt_kprintf("%02x\n", rx_buffer[6]);
-            rt_kprintf("%02x\n", rx_buffer[7]);
-            rt_kprintf("%02x\n", rx_buffer[8]);
-            rt_kprintf("%02x\n", rx_buffer[9]);
-            rt_kprintf("%02x\n", rx_buffer[10]);
-            rt_kprintf("%02x\n", rx_buffer[11]);
-            rt_kprintf("%02x\n", rx_buffer[12]);
-            rt_kprintf("%02x\n", rx_buffer[13]);
-            rt_kprintf("%02x\n", rx_buffer[14]);
-            rt_kprintf("%02x\n", rx_buffer[15]);
-            rt_kprintf("%02x\n", rx_buffer[16]);
-            rt_kprintf("%02x\n", rx_buffer[17]);
-            rt_kprintf("%02x\n", rx_buffer[18]);
-            rt_kprintf("%02x\n", rx_buffer[19]);
-            rt_kprintf("%02x\n", rx_buffer[20]);
-            rt_kprintf("%02x\n", rx_buffer[21]);
+//            rt_kprintf("%02x\n", rx_buffer[0]);
+//            rt_kprintf("%02x\n", rx_buffer[1]);
+//            rt_kprintf("%02x\n", rx_buffer[2]);
+//            rt_kprintf("%02x\n", rx_buffer[3]);
+//            rt_kprintf("%02x\n", rx_buffer[4]);
+//            rt_kprintf("%02x\n", rx_buffer[5]);
+//            rt_kprintf("%02x\n", rx_buffer[6]);
+//            rt_kprintf("%02x\n", rx_buffer[7]);
+//            rt_kprintf("%02x\n", rx_buffer[8]);
+//            rt_kprintf("%02x\n", rx_buffer[9]);
+//            rt_kprintf("%02x\n", rx_buffer[10]);
+//            rt_kprintf("%02x\n", rx_buffer[11]);
+//            rt_kprintf("%02x\n", rx_buffer[12]);
+//            rt_kprintf("%02x\n", rx_buffer[13]);
+//            rt_kprintf("%02x\n", rx_buffer[14]);
+//            rt_kprintf("%02x\n", rx_buffer[15]);
+//            rt_kprintf("%02x\n", rx_buffer[16]);
+//            rt_kprintf("%02x\n", rx_buffer[17]);
+//            rt_kprintf("%02x\n", rx_buffer[18]);
+//            rt_kprintf("%02x\n", rx_buffer[19]);
+//            rt_kprintf("%02x\n", rx_buffer[20]);
+//            rt_kprintf("%02x\n", rx_buffer[21]);
             if ((rx_buffer[0] == 0x5A) && (rx_buffer[18] == 0xA5))
             {
-                rt_kprintf("recevice success\n");
+                //rt_kprintf("recevice success\n");
                 //判断指令类型，若不为0xFF，则是转矩控制指令,否则为状态查询指令
                 if ((rx_buffer[1] != 0xFF) && (rx_buffer[17] != 0xFF))
                 {
@@ -151,7 +151,7 @@ static void rs485_serial_thread_entry(void *parameter)
                     }
                     else
                     {
-                        rt_kprintf("check_sum right\n");
+                        //rt_kprintf("check_sum right\n");
 
                         /* 向电机发送转矩电流控制数据 */
                         can_tx_msg.ide = RT_CAN_STDID; /* 标准格式 */
@@ -383,16 +383,16 @@ static void can_rx_thread_entry(void *parameter)
         /* 从 CAN 读取一帧数据 */
         rt_device_read(can_dev, 0, &rxmsg, sizeof(rxmsg));
         /* 打印数据 ID 及内容 */
-        rt_kprintf("ID:%x", rxmsg.id);
-        for (i = 0; i < 8; i++)
-        {
-            rt_kprintf("%2x", rxmsg.data[i]);
-        }
+//        rt_kprintf("ID:%x", rxmsg.id);
+//        for (i = 0; i < 8; i++)
+//        {
+//            rt_kprintf("%2x", rxmsg.data[i]);
+//        }
 
-        rt_kprintf("\n");
+        //rt_kprintf("\n");
         if (rxmsg.data[0] == STATE_QUEST_CMD)/*判断是不是状态查询帧*/
         {
-            rt_kprintf("state_quest\n");
+           // rt_kprintf("state_quest\n");
             /*根据id号判断是哪个电机，并把相应的值放进数据发送数组中*/
             /*由于控制指令和查询状态指令的返回值格式相同，这里不做区分*/
             switch (rxmsg.id)
@@ -536,7 +536,7 @@ static void motor_on_thread_entry()
     {
         /* 阻塞等待接收信号量 */
         rt_sem_take(&motor_on_sem, RT_WAITING_FOREVER);
-        rt_kprintf("power up motor!\n");
+        //rt_kprintf("power up motor!\n");
         /* CAN向电机1发送数据 */
         can_motor_on_msg.id = MOTOR1_ID;
         /* 发送一帧 CAN 数据 */
@@ -601,7 +601,7 @@ static void motor_off_thread_entry()
     {
         /* 阻塞等待接收信号量 */
         rt_sem_take(&motor_off_sem, RT_WAITING_FOREVER);
-        rt_kprintf("power off motor!\n");
+        //rt_kprintf("power off motor!\n");
         /* CAN向电机1发送数据 */
         can_motor_off_msg.id = MOTOR1_ID;
         /* 发送一帧 CAN 数据 */
