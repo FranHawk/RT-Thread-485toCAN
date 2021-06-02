@@ -144,7 +144,7 @@ static void rs485_serial_thread_entry(void *parameter)
                     {
                         check_sum += rx_buffer[check_index];
                     }
-                    if (check_sum != rx_buffer[17])
+                    if ((check_sum != rx_buffer[17])&&(rx_buffer[17] != 0x00))
                     {
                         rt_kprintf("check_sum wrong\n");
                         rt_kprintf("%02x\n", check_sum);
@@ -461,7 +461,7 @@ static void can_rx_thread_entry(void *parameter)
 
     }
 }
-
+/* CAN接收数据处理初始化 */
 static rt_err_t can_rx_thread_init()
 {
     rt_err_t res;
@@ -651,15 +651,15 @@ static rt_err_t motor_on_off_thread_init(void)
     res = RT_EOK;
 
     /* 按键0引脚为输入模式 */
-    rt_pin_mode(KEY0_PIN, PIN_MODE_INPUT);
+    rt_pin_mode(KEY0_PIN, PIN_MODE_INPUT_PULLUP);
     /* 绑定中断，上升沿模式，回调函数名为motor_on */
-    rt_pin_attach_irq(KEY0_PIN, PIN_IRQ_MODE_RISING, motor_on_irq, RT_NULL);
-
+    rt_pin_attach_irq(KEY0_PIN, PIN_IRQ_MODE_FALLING, motor_on_irq, RT_NULL);
+    rt_pin_irq_enable(KEY0_PIN, PIN_IRQ_ENABLE);
     /* 按键1引脚为输入模式 */
-    rt_pin_mode(KEY1_PIN, PIN_MODE_INPUT);
+    rt_pin_mode(KEY1_PIN, PIN_MODE_INPUT_PULLUP);
     /* 绑定中断，上升沿模式，回调函数名为motor_on */
-    rt_pin_attach_irq(KEY1_PIN, PIN_IRQ_MODE_RISING, motor_off_irq, RT_NULL);
-
+    rt_pin_attach_irq(KEY1_PIN, PIN_IRQ_MODE_FALLING, motor_off_irq, RT_NULL);
+    rt_pin_irq_enable(KEY1_PIN, PIN_IRQ_ENABLE);
     /* 初始化电机启动信号量 */
     rt_sem_init(&motor_on_sem, "motor_on_sem", 0, RT_IPC_FLAG_FIFO);
     /* 初始化电机启动信号量 */
