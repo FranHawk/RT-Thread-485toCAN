@@ -144,7 +144,7 @@ static void rs485_serial_thread_entry(void *parameter)
                     {
                         check_sum += rx_buffer[check_index];
                     }
-                    if ((check_sum != rx_buffer[17])&&(rx_buffer[17] != 0x00))
+                    if ((check_sum != rx_buffer[17]) && (rx_buffer[17] != 0x00))
                     {
                         rt_kprintf("check_sum wrong\n");
                         rt_kprintf("%02x\n", check_sum);
@@ -219,6 +219,13 @@ static void rs485_serial_thread_entry(void *parameter)
                         can_tx_msg.data[5] = rx_buffer[16];
                         /* 发送一帧 CAN 数据 */
                         size = rt_device_write(can_dev, 0, &can_tx_msg, sizeof(can_tx_msg));
+                        for (check_index = 1; check_index < 33; check_index++)
+                        {
+                            serial_tx_buffer[33] += serial_tx_buffer[check_index];
+                        }
+                        rt_pin_write(RS485A_RE_PIN, PIN_HIGH);/*使485处于发送模式*/
+                        rt_device_write(rs485_serial_device_handle, 0, serial_tx_buffer, sizeof(serial_tx_buffer));
+                        rt_pin_write(RS485A_RE_PIN, PIN_LOW);/*使485处于接收模式*/
                     }
                 }
                 else
@@ -275,6 +282,15 @@ static void rs485_serial_thread_entry(void *parameter)
                     can_tx_msg.id = MOTOR8_ID;
                     /* 发送一帧 CAN 数据 */
                     size = rt_device_write(can_dev, 0, &can_tx_msg, sizeof(can_tx_msg));
+
+                    //通过485向上位机发送数据
+                    for (check_index = 1; check_index < 33; check_index++)
+                    {
+                        serial_tx_buffer[33] += serial_tx_buffer[check_index];
+                    }
+                    rt_pin_write(RS485A_RE_PIN, PIN_HIGH);/*使485处于发送模式*/
+                    rt_device_write(rs485_serial_device_handle, 0, serial_tx_buffer, sizeof(serial_tx_buffer));
+                    rt_pin_write(RS485A_RE_PIN, PIN_LOW);/*使485处于接收模式*/
                 }
             }
         }
@@ -349,8 +365,6 @@ static rt_err_t can_rx_call(rt_device_t dev, rt_size_t size)
 /* CAN接收数据处理线程 */
 static void can_rx_thread_entry(void *parameter)
 {
-    int i;
-    rt_uint8_t check_index;
     struct rt_can_msg rxmsg = { 0 };
 
     serial_tx_buffer[0] = 0x5A;
@@ -388,13 +402,12 @@ static void can_rx_thread_entry(void *parameter)
 //        {
 //            rt_kprintf("%2x", rxmsg.data[i]);
 //        }
-
         //rt_kprintf("\n");
-        if (rxmsg.data[0] == STATE_QUEST_CMD)/*判断是不是状态查询帧*/
+        // rt_kprintf("state_quest\n");
+        /*根据id号判断是哪个电机，并把相应的值放进数据发送数组中*/
+        /*由于控制指令和查询状态指令的返回值格式相同，这里不做区分*/
+        if (rxmsg.data[0] == STATE_QUEST_CMD || rxmsg.data[0] == TORQUE_CURRENT_CMD)/*判断是不是状态查询帧*/
         {
-           // rt_kprintf("state_quest\n");
-            /*根据id号判断是哪个电机，并把相应的值放进数据发送数组中*/
-            /*由于控制指令和查询状态指令的返回值格式相同，这里不做区分*/
             switch (rxmsg.id)
             {
             case MOTOR1_ID:
@@ -444,15 +457,6 @@ static void can_rx_thread_entry(void *parameter)
                 serial_tx_buffer[16] = rxmsg.data[3];
                 serial_tx_buffer[31] = rxmsg.data[6];
                 serial_tx_buffer[32] = rxmsg.data[7];
-
-                //通过485向上位机发送数据
-                for (check_index = 1; check_index < 33; check_index++)
-                {
-                    serial_tx_buffer[33] += serial_tx_buffer[check_index];
-                }
-                rt_pin_write(RS485A_RE_PIN, PIN_HIGH);/*使485处于发送模式*/
-                rt_device_write(rs485_serial_device_handle, 0, serial_tx_buffer, sizeof(serial_tx_buffer));
-                rt_pin_write(RS485A_RE_PIN, PIN_LOW);/*使485处于接收模式*/
                 break;
             default:
                 break;
@@ -691,6 +695,7 @@ static rt_err_t motor_on_off_thread_init(void)
     }
     return res;
 }
+
 int main(void)
 {
 
